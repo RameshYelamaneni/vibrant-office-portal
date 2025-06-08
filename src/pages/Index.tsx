@@ -19,6 +19,17 @@ const Index = () => {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+
+    // Listen for module change events from Dashboard quick actions
+    const handleModuleChange = (event: CustomEvent) => {
+      setActiveModule(event.detail);
+    };
+
+    window.addEventListener('moduleChange', handleModuleChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('moduleChange', handleModuleChange as EventListener);
+    };
   }, []);
 
   const handleLogin = (userData: any) => {

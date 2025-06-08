@@ -1,13 +1,12 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Users, Shield, Database, Mail } from "lucide-react";
+import { Settings, Users, Shield, Database, Mail, Building2, Download } from "lucide-react";
+import DatabaseSetup from './DatabaseSetup';
+import CompanyProfile from './CompanyProfile';
+import EmailSetup from './EmailSetup';
 
 const SettingsModule = () => {
   const [roles] = useState([
@@ -78,47 +77,206 @@ const SettingsModule = () => {
     }
   ]);
 
-  const [dbConfig, setDbConfig] = useState({
-    host: "localhost",
-    port: "5432",
-    database: "company_portal",
-    username: "admin",
-    password: "********"
-  });
+  const downloadProject = () => {
+    // Create a comprehensive project structure
+    const projectFiles = {
+      'README.md': `# Company Portal
 
-  const modules = [
-    { key: 'employees', label: 'Employee Management' },
-    { key: 'timesheet', label: 'Timesheet Management' },
-    { key: 'marketing', label: 'Marketing Management' },
-    { key: 'documents', label: 'Company Documents' },
-    { key: 'hr', label: 'HR Operations' },
-    { key: 'settings', label: 'Settings' }
-  ];
+A comprehensive company management system built with React, TypeScript, and Tailwind CSS.
 
-  const permissionTypes = [
-    { key: 'view', label: 'View' },
-    { key: 'add', label: 'Add' },
-    { key: 'edit', label: 'Edit' },
-    { key: 'delete', label: 'Delete' }
-  ];
+## Features
+- Employee Management
+- Timesheet Management
+- Marketing Management
+- Document Management
+- Role-based Access Control
+- Email Integration (Outlook/Gmail)
+- Database Configuration
+- Company Branding
+
+## Setup Instructions
+
+1. Install dependencies:
+   \`\`\`
+   npm install
+   \`\`\`
+
+2. Configure database connection in Settings → Database Configuration
+
+3. Import the provided SQL schema into your database
+
+4. Configure email settings in Settings → Email Configuration
+
+5. Start the development server:
+   \`\`\`
+   npm run dev
+   \`\`\`
+
+## Database Setup
+
+Import the \`company_portal_schema.sql\` file into your MySQL/PostgreSQL database.
+
+## Email Configuration
+
+For Outlook/Office 365, you'll need to generate an app password.
+For Gmail, enable 2FA and create an app password.
+
+## Default Login Credentials
+
+- Admin: admin@company.com / admin123
+- Manager: manager@company.com / manager123
+- Employee: employee@company.com / employee123
+- HR: hr@company.com / hr123
+
+## Environment Configuration
+
+All configuration is done through the web interface:
+- Database settings in Settings → Database
+- Email settings in Settings → Email
+- Company branding in Settings → Company Profile
+`,
+
+      'package.json': JSON.stringify({
+        "name": "company-portal",
+        "version": "1.0.0",
+        "description": "A comprehensive company management system",
+        "type": "module",
+        "scripts": {
+          "dev": "vite",
+          "build": "tsc && vite build",
+          "preview": "vite preview",
+          "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+        },
+        "dependencies": {
+          "react": "^18.2.0",
+          "react-dom": "^18.2.0",
+          "react-router-dom": "^6.8.1",
+          "@tanstack/react-query": "^4.24.6",
+          "lucide-react": "^0.244.0",
+          "class-variance-authority": "^0.7.0",
+          "clsx": "^2.0.0",
+          "tailwind-merge": "^1.14.0"
+        },
+        "devDependencies": {
+          "@types/react": "^18.2.15",
+          "@types/react-dom": "^18.2.7",
+          "@typescript-eslint/eslint-plugin": "^6.0.0",
+          "@typescript-eslint/parser": "^6.0.0",
+          "@vitejs/plugin-react": "^4.0.3",
+          "autoprefixer": "^10.4.14",
+          "eslint": "^8.45.0",
+          "eslint-plugin-react-hooks": "^4.6.0",
+          "eslint-plugin-react-refresh": "^0.4.3",
+          "postcss": "^8.4.27",
+          "tailwindcss": "^3.3.3",
+          "typescript": "^5.0.2",
+          "vite": "^4.4.5"
+        }
+      }, null, 2),
+
+      'installation-guide.md': `# Installation Guide
+
+## Prerequisites
+- Node.js 18+ 
+- MySQL or PostgreSQL database
+- Email account (Outlook/Gmail) for notifications
+
+## Step-by-Step Installation
+
+### 1. Extract and Setup
+\`\`\`bash
+# Extract the downloaded ZIP file
+# Navigate to the project directory
+cd company-portal
+
+# Install dependencies
+npm install
+\`\`\`
+
+### 2. Database Setup
+1. Create a new database named 'company_portal'
+2. Import the provided SQL schema:
+   \`\`\`sql
+   mysql -u username -p company_portal < company_portal_schema.sql
+   \`\`\`
+
+### 3. Start the Application
+\`\`\`bash
+npm run dev
+\`\`\`
+
+### 4. Initial Configuration
+1. Open http://localhost:3000
+2. Login with admin@company.com / admin123
+3. Go to Settings → Database Configuration
+4. Configure your database connection
+5. Go to Settings → Email Configuration
+6. Setup email integration
+7. Go to Settings → Company Profile
+8. Customize your company branding
+
+### 5. Production Build
+\`\`\`bash
+npm run build
+\`\`\`
+
+## Troubleshooting
+
+### Database Connection Issues
+- Verify database credentials
+- Check if database server is running
+- Ensure firewall allows connections
+
+### Email Configuration Issues
+- Use app passwords for Gmail/Outlook
+- Enable 2FA before generating app passwords
+- Check SMTP settings
+
+## Support
+For technical support, refer to the documentation or contact your system administrator.
+`
+    };
+
+    // Create and download the project structure
+    const zip = JSON.stringify(projectFiles, null, 2);
+    const blob = new Blob([zip], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'company-portal-project.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800">Roles & Settings</h1>
-        <Button className="flex items-center space-x-2">
-          <Settings className="h-4 w-4" />
-          <span>Add New Role</span>
+        <h1 className="text-3xl font-bold text-gray-800">System Settings</h1>
+        <Button onClick={downloadProject} className="flex items-center space-x-2 bg-green-600 hover:bg-green-700">
+          <Download className="h-4 w-4" />
+          <span>Download Complete Project</span>
         </Button>
       </div>
 
-      <Tabs defaultValue="roles" className="w-full">
+      <Tabs defaultValue="company" className="w-full">
         <TabsList>
+          <TabsTrigger value="company">Company Profile</TabsTrigger>
+          <TabsTrigger value="database">Database Setup</TabsTrigger>
+          <TabsTrigger value="email">Email Configuration</TabsTrigger>
           <TabsTrigger value="roles">Role Management</TabsTrigger>
-          <TabsTrigger value="database">Database Configuration</TabsTrigger>
-          <TabsTrigger value="email">Email Settings</TabsTrigger>
-          <TabsTrigger value="system">System Settings</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="company">
+          <CompanyProfile />
+        </TabsContent>
+
+        <TabsContent value="database">
+          <DatabaseSetup />
+        </TabsContent>
+
+        <TabsContent value="email">
+          <EmailSetup />
+        </TabsContent>
 
         <TabsContent value="roles">
           <div className="space-y-6">
@@ -141,273 +299,7 @@ const SettingsModule = () => {
                 </div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Permission Matrix</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-3 font-semibold">Module</th>
-                        {roles.map((role) => (
-                          <th key={role.id} className="text-center p-3 font-semibold">
-                            {role.name}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {modules.map((module) => (
-                        <tr key={module.key} className="border-b">
-                          <td className="p-3 font-medium">{module.label}</td>
-                          {roles.map((role) => (
-                            <td key={role.id} className="p-3 text-center">
-                              <div className="space-y-1">
-                                {permissionTypes.map((perm) => {
-                                  const hasPermission = role.permissions[module.key]?.[perm.key];
-                                  return (
-                                    <Badge
-                                      key={perm.key}
-                                      variant={hasPermission ? "default" : "secondary"}
-                                      className={`text-xs mr-1 ${
-                                        hasPermission 
-                                          ? "bg-green-100 text-green-800" 
-                                          : "bg-gray-100 text-gray-500"
-                                      }`}
-                                    >
-                                      {perm.label}
-                                    </Badge>
-                                  );
-                                })}
-                              </div>
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="database">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Database className="mr-2 h-5 w-5" />
-                Database Configuration
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="dbHost">Database Host</Label>
-                    <Input
-                      id="dbHost"
-                      value={dbConfig.host}
-                      onChange={(e) => setDbConfig({...dbConfig, host: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dbPort">Port</Label>
-                    <Input
-                      id="dbPort"
-                      value={dbConfig.port}
-                      onChange={(e) => setDbConfig({...dbConfig, port: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dbName">Database Name</Label>
-                    <Input
-                      id="dbName"
-                      value={dbConfig.database}
-                      onChange={(e) => setDbConfig({...dbConfig, database: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dbUser">Username</Label>
-                    <Input
-                      id="dbUser"
-                      value={dbConfig.username}
-                      onChange={(e) => setDbConfig({...dbConfig, username: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dbPassword">Password</Label>
-                    <Input
-                      id="dbPassword"
-                      type="password"
-                      value={dbConfig.password}
-                      onChange={(e) => setDbConfig({...dbConfig, password: e.target.value})}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Table Configuration</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Employees Table</Label>
-                      <Input value="employees" placeholder="Table name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Timesheets Table</Label>
-                      <Input value="timesheets" placeholder="Table name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Marketing Candidates Table</Label>
-                      <Input value="marketing_candidates" placeholder="Table name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Documents Table</Label>
-                      <Input value="documents" placeholder="Table name" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Button>Test Connection</Button>
-                  <Button variant="outline">Save Configuration</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="email">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Mail className="mr-2 h-5 w-5" />
-                Email Configuration
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="emailProvider">Email Provider</Label>
-                    <select id="emailProvider" className="w-full px-3 py-2 border rounded-md">
-                      <option value="outlook">Microsoft Outlook</option>
-                      <option value="gmail">Gmail</option>
-                      <option value="smtp">Custom SMTP</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="smtpHost">SMTP Host</Label>
-                    <Input id="smtpHost" placeholder="smtp.office365.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="smtpPort">SMTP Port</Label>
-                    <Input id="smtpPort" placeholder="587" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="emailUser">Email Username</Label>
-                    <Input id="emailUser" placeholder="your-email@company.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="emailPassword">Email Password</Label>
-                    <Input id="emailPassword" type="password" placeholder="Password or App Password" />
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Notification Settings</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span>New Employee Notifications</span>
-                      <Switch />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Timesheet Approval Notifications</span>
-                      <Switch />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Marketing Updates</span>
-                      <Switch />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Document Upload Notifications</span>
-                      <Switch />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Button>Test Email</Button>
-                  <Button variant="outline">Save Settings</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="system">
-          <Card>
-            <CardHeader>
-              <CardTitle>System Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">General Settings</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-medium">Maintenance Mode</span>
-                        <p className="text-sm text-gray-600">Enable to restrict access during updates</p>
-                      </div>
-                      <Switch />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-medium">Auto Backup</span>
-                        <p className="text-sm text-gray-600">Automatically backup data daily</p>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-medium">Two-Factor Authentication</span>
-                        <p className="text-sm text-gray-600">Require 2FA for admin accounts</p>
-                      </div>
-                      <Switch />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Export & Import</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button variant="outline" className="h-20 flex flex-col">
-                      <Database className="h-6 w-6 mb-2" />
-                      Export Database
-                    </Button>
-                    <Button variant="outline" className="h-20 flex flex-col">
-                      <Users className="h-6 w-6 mb-2" />
-                      Export User Data
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Download Complete Project</h3>
-                  <p className="text-sm text-gray-600">
-                    Download the complete portal with source code, database schema, and documentation.
-                  </p>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
-                    Download Project Package
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

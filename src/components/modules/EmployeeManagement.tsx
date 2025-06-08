@@ -1,64 +1,49 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, Search, Eye, Upload, Trash2, Edit } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Plus, Search, Eye } from "lucide-react";
+import { FormHandlers, Employee } from '../../services/FormHandlers';
+import AddEmployeeForm from '../forms/AddEmployeeForm';
 
 const EmployeeManagement = () => {
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john.doe@company.com",
-      position: "Software Developer",
-      department: "IT",
-      status: "Active",
-      joinDate: "2023-01-15",
-      documents: ["Resume.pdf", "Contract.pdf", "ID_Copy.pdf"]
-    },
-    {
-      id: 2,
-      name: "Sarah Wilson",
-      email: "sarah.wilson@company.com",
-      position: "Marketing Manager",
-      department: "Marketing",
-      status: "Active",
-      joinDate: "2022-11-20",
-      documents: ["Resume.pdf", "Contract.pdf"]
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      email: "mike.johnson@company.com",
-      position: "HR Specialist",
-      department: "HR",
-      status: "Active",
-      joinDate: "2023-03-10",
-      documents: ["Resume.pdf", "Contract.pdf", "Certification.pdf"]
-    }
-  ]);
-
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("list");
 
-  const handleAddEmployee = () => {
-    setShowAddForm(true);
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  const loadEmployees = async () => {
+    try {
+      const employeeData = await FormHandlers.getEmployees();
+      setEmployees(employeeData);
+    } catch (error) {
+      console.error('Failed to load employees:', error);
+    }
   };
 
-  const handleViewEmployee = (employee: any) => {
+  const handleAddEmployee = () => {
+    setActiveTab("add");
+  };
+
+  const handleEmployeeAdded = (newEmployee: Employee) => {
+    setEmployees(prev => [...prev, newEmployee]);
+    setActiveTab("list");
+  };
+
+  const handleViewEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
+    setActiveTab("details");
   };
 
   const filteredEmployees = employees.filter(emp =>
-    emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (emp.firstName + ' ' + emp.lastName).toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -73,7 +58,7 @@ const EmployeeManagement = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="list" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="list">Employee List</TabsTrigger>
           <TabsTrigger value="add">Add New Employee</TabsTrigger>
@@ -98,89 +83,53 @@ const EmployeeManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {filteredEmployees.map((employee) => (
-                  <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex items-center space-x-4">
-                      <Avatar>
-                        <AvatarFallback className="bg-blue-100 text-blue-600">
-                          {employee.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{employee.name}</h3>
-                        <p className="text-sm text-gray-600">{employee.position}</p>
-                        <p className="text-xs text-gray-500">{employee.email}</p>
+                {filteredEmployees.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No employees found. Add your first employee to get started.</p>
+                    <Button onClick={handleAddEmployee} className="mt-4">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add First Employee
+                    </Button>
+                  </div>
+                ) : (
+                  filteredEmployees.map((employee) => (
+                    <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center space-x-4">
+                        <Avatar>
+                          <AvatarFallback className="bg-blue-100 text-blue-600">
+                            {employee.firstName[0]}{employee.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{employee.firstName} {employee.lastName}</h3>
+                          <p className="text-sm text-gray-600">{employee.position}</p>
+                          <p className="text-xs text-gray-500">{employee.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Badge variant="default">Active</Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewEmployee(employee)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge variant={employee.status === 'Active' ? 'default' : 'secondary'}>
-                        {employee.status}
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewEmployee(employee)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="add">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Employee</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" placeholder="Enter first name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" placeholder="Enter last name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="Enter email" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="position">Position</Label>
-                    <Input id="position" placeholder="Enter position" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
-                    <Input id="department" placeholder="Enter department" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="joinDate">Join Date</Label>
-                    <Input id="joinDate" type="date" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Profile Photo</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button type="submit">Add Employee</Button>
-                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+          <AddEmployeeForm 
+            onSuccess={handleEmployeeAdded}
+            onCancel={() => setActiveTab("list")}
+          />
         </TabsContent>
 
         {selectedEmployee && (

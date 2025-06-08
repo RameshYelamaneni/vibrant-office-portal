@@ -1,10 +1,19 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Clock, Target, FileText, TrendingUp, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, Clock, Target, FileText, TrendingUp, AlertCircle, Plus, Eye, Upload } from "lucide-react";
 
 interface DashboardProps {
   userRole: string;
+}
+
+interface QuickAction {
+  title: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  action: () => void;
+  module: string;
 }
 
 const Dashboard = ({ userRole }: DashboardProps) => {
@@ -21,6 +30,57 @@ const Dashboard = ({ userRole }: DashboardProps) => {
     { type: "Marketing", message: "Interview scheduled for candidate Alex Brown", time: "6 hours ago" },
     { type: "Document", message: "Company policy updated", time: "1 day ago" },
   ];
+
+  const handleModuleNavigation = (module: string) => {
+    // Trigger module change by dispatching a custom event
+    const event = new CustomEvent('moduleChange', { detail: module });
+    window.dispatchEvent(event);
+  };
+
+  const quickActions: QuickAction[] = [
+    {
+      title: "Add New Employee",
+      description: "Quickly add a new team member",
+      icon: Plus,
+      action: () => handleModuleNavigation('employees'),
+      module: 'employees'
+    },
+    {
+      title: "Create Timesheet",
+      description: "Add a new timesheet entry",
+      icon: Clock,
+      action: () => handleModuleNavigation('timesheet'),
+      module: 'timesheet'
+    },
+    {
+      title: "Review Applications",
+      description: "Check pending marketing applications",
+      icon: Eye,
+      action: () => handleModuleNavigation('marketing'),
+      module: 'marketing'
+    },
+    {
+      title: "Upload Documents",
+      description: "Add company documents",
+      icon: Upload,
+      action: () => handleModuleNavigation('documents'),
+      module: 'documents'
+    }
+  ];
+
+  const hasAccess = (module: string): boolean => {
+    const permissions = {
+      'Admin': ['employees', 'timesheet', 'marketing', 'documents'],
+      'Manager': ['employees', 'timesheet', 'marketing', 'documents'],
+      'Employee': ['timesheet'],
+      'HR': ['employees', 'timesheet', 'documents'],
+      'Marketing Associate': ['timesheet', 'marketing']
+    };
+
+    return permissions[userRole as keyof typeof permissions]?.includes(module) || false;
+  };
+
+  const accessibleActions = quickActions.filter(action => hasAccess(action.module));
 
   return (
     <div className="p-6 space-y-6">
@@ -85,18 +145,25 @@ const Dashboard = ({ userRole }: DashboardProps) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <button className="w-full p-3 text-left rounded-lg border hover:bg-gray-50 transition-colors">
-                <p className="font-medium text-gray-900">Add New Employee</p>
-                <p className="text-sm text-gray-500">Quickly add a new team member</p>
-              </button>
-              <button className="w-full p-3 text-left rounded-lg border hover:bg-gray-50 transition-colors">
-                <p className="font-medium text-gray-900">Review Timesheets</p>
-                <p className="text-sm text-gray-500">Check pending timesheet approvals</p>
-              </button>
-              <button className="w-full p-3 text-left rounded-lg border hover:bg-gray-50 transition-colors">
-                <p className="font-medium text-gray-900">Upload Documents</p>
-                <p className="text-sm text-gray-500">Add company documents</p>
-              </button>
+              {accessibleActions.map((action, index) => {
+                const IconComponent = action.icon;
+                return (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    className="w-full p-4 h-auto justify-start hover:bg-gray-50 transition-colors"
+                    onClick={action.action}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <IconComponent className="h-5 w-5 text-blue-600" />
+                      <div className="text-left">
+                        <p className="font-medium text-gray-900">{action.title}</p>
+                        <p className="text-sm text-gray-500">{action.description}</p>
+                      </div>
+                    </div>
+                  </Button>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
