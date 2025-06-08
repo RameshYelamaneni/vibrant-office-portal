@@ -51,34 +51,34 @@ const EmployeeManagement = () => {
   );
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800">Employee Management</h1>
-        <Button onClick={handleAddEmployee} className="flex items-center space-x-2">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Employee Management</h1>
+        <Button onClick={handleAddEmployee} className="flex items-center space-x-2 w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           <span>Add New Employee</span>
         </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList>
-          <TabsTrigger value="list">Employee List</TabsTrigger>
-          <TabsTrigger value="add">Add New Employee</TabsTrigger>
-          {selectedEmployee && <TabsTrigger value="details">Employee Details</TabsTrigger>}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3">
+          <TabsTrigger value="list" className="text-xs md:text-sm">Employee List</TabsTrigger>
+          <TabsTrigger value="add" className="text-xs md:text-sm">Add New Employee</TabsTrigger>
+          {selectedEmployee && <TabsTrigger value="details" className="text-xs md:text-sm">Employee Details</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>All Employees ({employees.length})</CardTitle>
-                <div className="flex items-center space-x-2">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <CardTitle className="text-lg md:text-xl">All Employees ({employees.length})</CardTitle>
+                <div className="flex items-center space-x-2 w-full md:w-auto">
                   <Search className="h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search employees..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-64"
+                    className="w-full md:w-64"
                   />
                 </div>
               </div>
@@ -95,25 +95,26 @@ const EmployeeManagement = () => {
                   </div>
                 ) : (
                   filteredEmployees.map((employee) => (
-                    <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-center space-x-4">
+                    <div key={employee.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 space-y-4 md:space-y-0">
+                      <div className="flex items-center space-x-4 flex-1">
                         <Avatar>
                           <AvatarFallback className="bg-blue-100 text-blue-600">
                             {employee.firstName[0]}{employee.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{employee.firstName} {employee.lastName}</h3>
                           <p className="text-sm text-gray-600">{employee.position}</p>
-                          <p className="text-xs text-gray-500">{employee.email}</p>
+                          <p className="text-xs text-gray-500 break-all">{employee.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3 w-full md:w-auto">
                         <Badge variant="default">Active</Badge>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewEmployee(employee)}
+                          className="w-full md:w-auto"
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           View
@@ -136,14 +137,14 @@ const EmployeeManagement = () => {
 
         {selectedEmployee && (
           <TabsContent value="details">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle>Personal Details</CardTitle>
+                  <CardTitle className="text-lg md:text-xl">Personal Details</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                       <Avatar className="h-16 w-16">
                         <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
                           {selectedEmployee.firstName[0]}{selectedEmployee.lastName[0]}
@@ -154,10 +155,10 @@ const EmployeeManagement = () => {
                         <p className="text-gray-600">{selectedEmployee.position}</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm font-medium text-gray-500">Email</Label>
-                        <p className="mt-1">{selectedEmployee.email}</p>
+                        <p className="mt-1 break-all">{selectedEmployee.email}</p>
                       </div>
                       <div>
                         <Label className="text-sm font-medium text-gray-500">Department</Label>
@@ -182,9 +183,9 @@ const EmployeeManagement = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Documents
-                    <Button size="sm">
+                  <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <span>Documents</span>
+                    <Button size="sm" className="w-full sm:w-auto">
                       <Upload className="h-4 w-4 mr-1" />
                       Upload
                     </Button>

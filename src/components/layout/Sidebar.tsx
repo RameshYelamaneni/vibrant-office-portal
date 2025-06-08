@@ -35,25 +35,25 @@ const Sidebar = ({ activeModule, onModuleChange, userRole }: SidebarProps) => {
   const filteredItems = menuItems.filter(item => item.roles.includes(userRole));
 
   return (
-    <div className="w-64 bg-gray-900 text-white min-h-screen">
-      <div className="p-6">
-        <h2 className="text-lg font-semibold mb-6">Navigation</h2>
-        <nav className="space-y-2">
+    <div className="w-full md:w-64 bg-gray-900 text-white min-h-screen">
+      <div className="p-3 md:p-6">
+        <h2 className="text-base md:text-lg font-semibold mb-4 md:mb-6">Navigation</h2>
+        <nav className="space-y-1 md:space-y-2">
           {filteredItems.map((item) => {
             const IconComponent = item.icon;
             return (
               <Button
                 key={item.id}
                 variant={activeModule === item.id ? "secondary" : "ghost"}
-                className={`w-full justify-start text-left ${
+                className={`w-full justify-start text-left text-xs md:text-sm p-2 md:p-3 ${
                   activeModule === item.id 
                     ? "bg-blue-600 text-white hover:bg-blue-700" 
                     : "text-gray-300 hover:text-white hover:bg-gray-800"
                 }`}
                 onClick={() => onModuleChange(item.id)}
               >
-                <IconComponent className="mr-3 h-4 w-4" />
-                {item.label}
+                <IconComponent className="mr-2 md:mr-3 h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </Button>
             );
           })}

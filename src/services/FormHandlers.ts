@@ -22,6 +22,7 @@ export interface Timesheet {
   breakDuration: number;
   notes?: string;
   status: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
+  totalHours?: number;
 }
 
 export interface MarketingCandidate {
@@ -35,6 +36,18 @@ export interface MarketingCandidate {
   submissions?: number;
   interviews?: number;
   lastContact?: string;
+}
+
+export interface LeaveRequest {
+  id?: number;
+  employeeId: number;
+  employeeName: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  appliedDate: string;
 }
 
 export class FormHandlers {
@@ -65,7 +78,6 @@ export class FormHandlers {
       employees.push(newEmployee);
       this.saveData('employees', employees);
       
-      // Simulate API delay
       setTimeout(() => resolve(newEmployee), 500);
     });
   }
@@ -104,6 +116,22 @@ export class FormHandlers {
     });
   }
 
+  static addLeaveRequest(request: LeaveRequest): Promise<LeaveRequest> {
+    return new Promise((resolve) => {
+      const requests = this.getData<LeaveRequest>('leave_requests');
+      const newRequest = {
+        ...request,
+        id: Date.now(),
+        appliedDate: new Date().toISOString().split('T')[0]
+      };
+      
+      requests.push(newRequest);
+      this.saveData('leave_requests', requests);
+      
+      setTimeout(() => resolve(newRequest), 500);
+    });
+  }
+
   static getEmployees(): Promise<Employee[]> {
     return new Promise((resolve) => {
       const employees = this.getData<Employee>('employees');
@@ -125,6 +153,13 @@ export class FormHandlers {
     });
   }
 
+  static getLeaveRequests(): Promise<LeaveRequest[]> {
+    return new Promise((resolve) => {
+      const requests = this.getData<LeaveRequest>('leave_requests');
+      setTimeout(() => resolve(requests), 200);
+    });
+  }
+
   private static calculateTotalHours(startTime: string, endTime: string, breakDuration: number): number {
     const [startHour, startMin] = startTime.split(':').map(Number);
     const [endHour, endMin] = endTime.split(':').map(Number);
@@ -138,7 +173,6 @@ export class FormHandlers {
 
   static sendEmail(to: string, subject: string, body: string): Promise<boolean> {
     return new Promise((resolve) => {
-      // Simulate email sending
       console.log(`Sending email to ${to}: ${subject}`);
       console.log(`Body: ${body}`);
       
