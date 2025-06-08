@@ -1,87 +1,84 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, CheckCircle, XCircle, Plus, Calendar } from "lucide-react";
+import { FormHandlers, Timesheet } from '../../services/FormHandlers';
+import AddTimesheetForm from '../forms/AddTimesheetForm';
 
 const TimesheetManagement = () => {
-  const [pendingTimesheets] = useState([
-    {
-      id: 1,
-      employeeName: "John Doe",
-      department: "IT",
-      weekEnding: "2024-01-12",
-      totalHours: 40,
-      status: "Pending",
-      submittedDate: "2024-01-13"
-    },
-    {
-      id: 2,
-      employeeName: "Sarah Wilson",
-      department: "Marketing",
-      weekEnding: "2024-01-12",
-      totalHours: 38,
-      status: "Pending",
-      submittedDate: "2024-01-13"
-    },
-    {
-      id: 3,
-      employeeName: "Mike Johnson",
-      department: "HR",
-      weekEnding: "2024-01-12",
-      totalHours: 42,
-      status: "Pending",
-      submittedDate: "2024-01-12"
-    }
-  ]);
+  const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
+  const [activeTab, setActiveTab] = useState("pending");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [allTimesheets] = useState([
-    {
-      id: 4,
-      employeeName: "John Doe",
-      department: "IT",
-      weekEnding: "2024-01-05",
-      totalHours: 40,
-      status: "Approved",
-      approvedBy: "Manager Smith",
-      approvedDate: "2024-01-08"
-    },
-    {
-      id: 5,
-      employeeName: "Sarah Wilson",
-      department: "Marketing",
-      weekEnding: "2024-01-05",
-      totalHours: 39,
-      status: "Approved",
-      approvedBy: "Manager Smith",
-      approvedDate: "2024-01-08"
-    },
-    {
-      id: 6,
-      employeeName: "Alex Brown",
-      department: "Sales",
-      weekEnding: "2024-01-05",
-      totalHours: 35,
-      status: "Rejected",
-      rejectedBy: "Manager Smith",
-      rejectedDate: "2024-01-08",
-      reason: "Missing project details"
-    }
-  ]);
+  useEffect(() => {
+    loadTimesheets();
+  }, []);
 
-  const handleApprove = (id: number) => {
-    console.log(`Approving timesheet ${id}`);
+  const loadTimesheets = async () => {
+    try {
+      const timesheetData = await FormHandlers.getTimesheets();
+      setTimesheets(timesheetData);
+    } catch (error) {
+      console.error('Failed to load timesheets:', error);
+    }
   };
 
-  const handleReject = (id: number) => {
-    console.log(`Rejecting timesheet ${id}`);
+  const pendingTimesheets = timesheets.filter(t => t.status === 'Submitted');
+  const allTimesheets = timesheets;
+
+  const handleApprove = async (id: number) => {
+    setIsLoading(true);
+    try {
+      // Update timesheet status to approved
+      const updatedTimesheets = timesheets.map(t => 
+        t.id === id ? { ...t, status: 'Approved' as const } : t
+      );
+      setTimesheets(updatedTimesheets);
+      
+      // Save to localStorage
+      localStorage.setItem('timesheets_data', JSON.stringify(updatedTimesheets));
+      
+      console.log(`Timesheet ${id} approved successfully`);
+    } catch (error) {
+      console.error('Failed to approve timesheet:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReject = async (id: number) => {
+    setIsLoading(true);
+    try {
+      // Update timesheet status to rejected
+      const updatedTimesheets = timesheets.map(t => 
+        t.id === id ? { ...t, status: 'Rejected' as const } : t
+      );
+      setTimesheets(updatedTimesheets);
+      
+      // Save to localStorage
+      localStorage.setItem('timesheets_data', JSON.stringify(updatedTimesheets));
+      
+      console.log(`Timesheet ${id} rejected successfully`);
+    } catch (error) {
+      console.error('Failed to reject timesheet:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTimesheetAdded = (newTimesheet: Timesheet) => {
+    setTimesheets(prev => [...prev, newTimesheet]);
+    setActiveTab("pending");
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Pending':
+      case 'Draft':
+        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Draft</Badge>;
+      case 'Submitted':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
       case 'Approved':
         return <Badge variant="default" className="bg-green-100 text-green-800">Approved</Badge>;
@@ -96,7 +93,10 @@ const TimesheetManagement = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Timesheet Management</h1>
-        <Button className="flex items-center space-x-2">
+        <Button 
+          className="flex items-center space-x-2"
+          onClick={() => setActiveTab("add")}
+        >
           <Plus className="h-4 w-4" />
           <span>New Timesheet</span>
         </Button>
@@ -119,8 +119,8 @@ const TimesheetManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">This Week's Submissions</p>
-                <p className="text-3xl font-bold text-blue-600">15</p>
+                <p className="text-sm font-medium text-gray-600">Total Timesheets</p>
+                <p className="text-3xl font-bold text-blue-600">{timesheets.length}</p>
               </div>
               <Calendar className="h-8 w-8 text-blue-500" />
             </div>
@@ -131,8 +131,8 @@ const TimesheetManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Average Hours/Week</p>
-                <p className="text-3xl font-bold text-green-600">39.5</p>
+                <p className="text-sm font-medium text-gray-600">Approved This Week</p>
+                <p className="text-3xl font-bold text-green-600">{timesheets.filter(t => t.status === 'Approved').length}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
@@ -140,10 +140,11 @@ const TimesheetManagement = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="pending" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="pending">Pending Approvals ({pendingTimesheets.length})</TabsTrigger>
           <TabsTrigger value="all">All Timesheets</TabsTrigger>
+          <TabsTrigger value="add">Add New Timesheet</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
@@ -154,44 +155,52 @@ const TimesheetManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {pendingTimesheets.map((timesheet) => (
-                  <div key={timesheet.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{timesheet.employeeName}</h3>
-                          <p className="text-sm text-gray-600">{timesheet.department}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Week Ending: {timesheet.weekEnding}</p>
-                          <p className="text-sm text-gray-600">Total Hours: {timesheet.totalHours}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Submitted: {timesheet.submittedDate}</p>
-                          {getStatusBadge(timesheet.status)}
+                {pendingTimesheets.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No pending timesheets to review.</p>
+                  </div>
+                ) : (
+                  pendingTimesheets.map((timesheet) => (
+                    <div key={timesheet.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4">
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Employee #{timesheet.employeeId}</h3>
+                            <p className="text-sm text-gray-600">Date: {timesheet.date}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Hours: {timesheet.startTime} - {timesheet.endTime}</p>
+                            <p className="text-sm text-gray-600">Break: {timesheet.breakDuration} minutes</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Notes: {timesheet.notes || 'No notes'}</p>
+                            {getStatusBadge(timesheet.status)}
+                          </div>
                         </div>
                       </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleApprove(timesheet.id!)}
+                          disabled={isLoading}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleReject(timesheet.id!)}
+                          disabled={isLoading}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleApprove(timesheet.id)}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleReject(timesheet.id)}
-                      >
-                        <XCircle className="h-4 w-4 mr-1" />
-                        Reject
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -204,37 +213,45 @@ const TimesheetManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {allTimesheets.map((timesheet) => (
-                  <div key={timesheet.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{timesheet.employeeName}</h3>
-                          <p className="text-sm text-gray-600">{timesheet.department}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Week Ending: {timesheet.weekEnding}</p>
-                          <p className="text-sm text-gray-600">Total Hours: {timesheet.totalHours}</p>
-                        </div>
-                        <div>
-                          {timesheet.status === 'Approved' && (
-                            <p className="text-sm text-gray-600">Approved by: {timesheet.approvedBy}</p>
-                          )}
-                          {timesheet.status === 'Rejected' && (
-                            <p className="text-sm text-gray-600">Reason: {timesheet.reason}</p>
-                          )}
-                          {getStatusBadge(timesheet.status)}
+                {allTimesheets.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No timesheets found. Add your first timesheet to get started.</p>
+                  </div>
+                ) : (
+                  allTimesheets.map((timesheet) => (
+                    <div key={timesheet.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4">
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Employee #{timesheet.employeeId}</h3>
+                            <p className="text-sm text-gray-600">Date: {timesheet.date}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Hours: {timesheet.startTime} - {timesheet.endTime}</p>
+                            <p className="text-sm text-gray-600">Break: {timesheet.breakDuration} minutes</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Notes: {timesheet.notes || 'No notes'}</p>
+                            {getStatusBadge(timesheet.status)}
+                          </div>
                         </div>
                       </div>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
                     </div>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="add">
+          <AddTimesheetForm 
+            onSuccess={handleTimesheetAdded}
+            onCancel={() => setActiveTab("pending")}
+          />
         </TabsContent>
 
         <TabsContent value="reports">

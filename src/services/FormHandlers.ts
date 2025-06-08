@@ -1,3 +1,4 @@
+
 export interface Employee {
   id?: number;
   firstName: string;
@@ -31,6 +32,9 @@ export interface MarketingCandidate {
   position: string;
   source: string;
   status: string;
+  submissions?: number;
+  interviews?: number;
+  lastContact?: string;
 }
 
 export class FormHandlers {

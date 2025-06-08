@@ -7,8 +7,20 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileText, Eye, Download, Trash2, Search, Folder } from "lucide-react";
 
+interface Document {
+  id: number;
+  name: string;
+  type: string;
+  category: string;
+  size: string;
+  uploadedBy: string;
+  uploadDate: string;
+  lastModified: string;
+  access: string;
+}
+
 const CompanyDocuments = () => {
-  const [documents] = useState([
+  const [documents, setDocuments] = useState<Document[]>([
     {
       id: 1,
       name: "Employee Handbook 2024",
@@ -56,9 +68,16 @@ const CompanyDocuments = () => {
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const categories = ["All", "HR Policies", "Safety", "Financial", "IT Policies", "Legal", "Operations"];
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [activeTab, setActiveTab] = useState("browse");
+  const [uploadForm, setUploadForm] = useState({
+    name: '',
+    category: '',
+    access: 'All Employees',
+    description: ''
+  });
+
+  const categories = ["All", "HR Policies", "Safety", "Financial", "IT Policies", "Legal", "Operations"];
 
   const filteredDocuments = documents.filter(doc => {
     const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -66,6 +85,158 @@ const CompanyDocuments = () => {
     const matchesCategory = selectedCategory === "All" || doc.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleViewDocument = (docId: number) => {
+    const doc = documents.find(d => d.id === docId);
+    if (doc) {
+      console.log(`Viewing document: ${doc.name}`);
+      // In a real app, this would open the document
+      alert(`Opening ${doc.name} for viewing`);
+    }
+  };
+
+  const handleDownloadDocument = (docId: number) => {
+    const doc = documents.find(d => d.id === docId);
+    if (doc) {
+      console.log(`Downloading document: ${doc.name}`);
+      // In a real app, this would trigger the download
+      alert(`Downloading ${doc.name}`);
+    }
+  };
+
+  const handleDeleteDocument = (docId: number) => {
+    const doc = documents.find(d => d.id === docId);
+    if (doc && confirm(`Are you sure you want to delete "${doc.name}"?`)) {
+      setDocuments(prev => prev.filter(d => d.id !== docId));
+      console.log(`Document ${doc.name} deleted`);
+    }
+  };
+
+  const handleUploadDocument = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!uploadForm.name || !uploadForm.category) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    const newDocument: Document = {
+      id: Math.max(...documents.map(d => d.id)) + 1,
+      name: uploadForm.name,
+      type: "PDF", // Default type
+      category: uploadForm.category,
+      size: "Unknown", // Would be calculated from actual file
+      uploadedBy: "Current User",
+      uploadDate: new Date().toISOString().split('T')[0],
+      lastModified: new Date().toISOString().split('T')[0],
+      access: uploadForm.access
+    };
+
+    setDocuments(prev => [...prev, newDocument]);
+    
+    // Reset form
+    setUploadForm({
+      name: '',
+      category: '',
+      access: 'All Employees',
+      description: ''
+    });
+    
+    setActiveTab("browse");
+    console.log('Document uploaded successfully:', newDocument);
+  };
+
+  const handleFileSelection = () => {
+    // In a real app, this would open file picker
+    const fileName = prompt("Enter document name (simulating file upload):");
+    if (fileName) {
+      setUploadForm(prev => ({ ...prev, name: fileName }));
+    }
+  };
+
+  const downloadCompleteProject = () => {
+    // Create a comprehensive project structure
+    const projectStructure = {
+      name: "Company Portal - Complete Project",
+      version: "1.0.0",
+      description: "Full-featured company management portal with employee management, timesheets, marketing, and document management",
+      files: {
+        "README.md": `# Company Portal
+
+A comprehensive company management system built with React, TypeScript, and Tailwind CSS.
+
+## Features
+- Employee Management
+- Timesheet Management
+- Marketing Candidate Management
+- Document Management
+- Role-based Access Control
+- Email Integration
+- Dashboard Analytics
+
+## Installation
+1. npm install
+2. npm run dev
+
+## Usage
+Login with predefined credentials or create new users through the admin panel.
+`,
+        "package.json": {
+          name: "company-portal",
+          version: "1.0.0",
+          type: "module",
+          scripts: {
+            dev: "vite",
+            build: "tsc && vite build",
+            preview: "vite preview"
+          },
+          dependencies: {
+            react: "^18.3.1",
+            "react-dom": "^18.3.1",
+            "react-router-dom": "^6.26.2",
+            "@tanstack/react-query": "^5.56.2",
+            "lucide-react": "^0.462.0",
+            "tailwindcss": "^3.4.0"
+          }
+        },
+        "src/": {
+          "components/": "All React components including forms, modules, and UI components",
+          "services/": "FormHandlers.ts and other service files",
+          "pages/": "Page components and routing",
+          "hooks/": "Custom React hooks",
+          "lib/": "Utility functions",
+          "styles/": "CSS and styling files"
+        }
+      },
+      setup: {
+        database: "Local Storage (can be replaced with Supabase)",
+        authentication: "Built-in user management",
+        styling: "Tailwind CSS with Shadcn/UI components",
+        icons: "Lucide React icons",
+        routing: "React Router DOM"
+      },
+      features: {
+        "Employee Management": "Add, view, and manage employees",
+        "Timesheet Management": "Track and approve employee timesheets",
+        "Marketing Management": "Manage job candidates and recruitment",
+        "Document Management": "Upload and organize company documents",
+        "Dashboard": "Overview with quick actions and analytics",
+        "Settings": "Company profile and system configuration"
+      }
+    };
+
+    const dataStr = JSON.stringify(projectStructure, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = 'company-portal-complete-project.json';
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    
+    console.log('Complete project structure downloaded');
+  };
 
   const getTypeIcon = (type: string) => {
     return <FileText className="h-4 w-4" />;
@@ -82,10 +253,22 @@ const CompanyDocuments = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Company Documents</h1>
-        <Button className="flex items-center space-x-2">
-          <Upload className="h-4 w-4" />
-          <span>Upload Document</span>
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={downloadCompleteProject}
+            className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
+          >
+            <Download className="h-4 w-4" />
+            <span>Download Complete Project</span>
+          </Button>
+          <Button 
+            className="flex items-center space-x-2"
+            onClick={() => setActiveTab("upload")}
+          >
+            <Upload className="h-4 w-4" />
+            <span>Upload Document</span>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -119,7 +302,7 @@ const CompanyDocuments = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Recent Uploads</p>
-                <p className="text-3xl font-bold text-purple-600">8</p>
+                <p className="text-3xl font-bold text-purple-600">{documents.filter(d => d.uploadDate === new Date().toISOString().split('T')[0]).length}</p>
               </div>
               <Upload className="h-8 w-8 text-purple-500" />
             </div>
@@ -130,8 +313,8 @@ const CompanyDocuments = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Size</p>
-                <p className="text-3xl font-bold text-orange-600">24.8 GB</p>
+                <p className="text-sm font-medium text-gray-600">Public Access</p>
+                <p className="text-3xl font-bold text-orange-600">{documents.filter(d => d.access === "All Employees").length}</p>
               </div>
               <FileText className="h-8 w-8 text-orange-500" />
             </div>
@@ -139,7 +322,7 @@ const CompanyDocuments = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="browse" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="browse">Browse Documents</TabsTrigger>
           <TabsTrigger value="upload">Upload New</TabsTrigger>
@@ -195,13 +378,25 @@ const CompanyDocuments = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button size="sm" variant="ghost">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => handleViewDocument(doc.id)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => handleDownloadDocument(doc.id)}
+                      >
                         <Download className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => handleDeleteDocument(doc.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -218,22 +413,32 @@ const CompanyDocuments = () => {
               <CardTitle>Upload New Document</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
+              <form onSubmit={handleUploadDocument} className="space-y-6">
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                   <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Document</h3>
                   <p className="text-gray-600 mb-4">Drag and drop your file here, or click to browse</p>
-                  <Button>Choose File</Button>
+                  <Button type="button" onClick={handleFileSelection}>Choose File</Button>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Document Name</label>
-                    <Input placeholder="Enter document name" />
+                    <Input 
+                      placeholder="Enter document name" 
+                      value={uploadForm.name}
+                      onChange={(e) => setUploadForm(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Category</label>
-                    <select className="w-full px-3 py-2 border rounded-md">
+                    <select 
+                      className="w-full px-3 py-2 border rounded-md"
+                      value={uploadForm.category}
+                      onChange={(e) => setUploadForm(prev => ({ ...prev, category: e.target.value }))}
+                      required
+                    >
                       <option value="">Select category</option>
                       {categories.slice(1).map(category => (
                         <option key={category} value={category}>{category}</option>
@@ -242,7 +447,11 @@ const CompanyDocuments = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Access Level</label>
-                    <select className="w-full px-3 py-2 border rounded-md">
+                    <select 
+                      className="w-full px-3 py-2 border rounded-md"
+                      value={uploadForm.access}
+                      onChange={(e) => setUploadForm(prev => ({ ...prev, access: e.target.value }))}
+                    >
                       <option value="All Employees">All Employees</option>
                       <option value="Management Only">Management Only</option>
                       <option value="HR Only">HR Only</option>
@@ -252,15 +461,25 @@ const CompanyDocuments = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Description</label>
-                    <Input placeholder="Brief description (optional)" />
+                    <Input 
+                      placeholder="Brief description (optional)" 
+                      value={uploadForm.description}
+                      onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
+                    />
                   </div>
                 </div>
                 
                 <div className="flex space-x-2">
-                  <Button>Upload Document</Button>
-                  <Button variant="outline">Cancel</Button>
+                  <Button type="submit">Upload Document</Button>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => setActiveTab("browse")}
+                  >
+                    Cancel
+                  </Button>
                 </div>
-              </div>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>

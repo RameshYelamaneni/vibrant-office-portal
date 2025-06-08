@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,53 +7,96 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Target, Calendar, TrendingUp, Users, Phone, Mail } from "lucide-react";
+import { FormHandlers, MarketingCandidate } from '../../services/FormHandlers';
 
 const MarketingManagement = () => {
-  const [candidates] = useState([
-    {
-      id: 1,
-      name: "Alex Thompson",
-      position: "Software Engineer",
-      source: "LinkedIn",
-      status: "Interview Scheduled",
-      submissions: 5,
-      interviews: 2,
-      lastContact: "2024-01-10",
-      email: "alex.thompson@email.com",
-      phone: "+1 (555) 123-4567"
-    },
-    {
-      id: 2,
-      name: "Emily Chen",
-      position: "Product Manager",
-      source: "Job Board",
-      status: "First Contact",
-      submissions: 3,
-      interviews: 0,
-      lastContact: "2024-01-12",
-      email: "emily.chen@email.com",
-      phone: "+1 (555) 987-6543"
-    },
-    {
-      id: 3,
-      name: "David Rodriguez",
-      position: "Marketing Specialist",
-      source: "Referral",
-      status: "Feedback Pending",
-      submissions: 8,
-      interviews: 3,
-      lastContact: "2024-01-08",
-      email: "david.rodriguez@email.com",
-      phone: "+1 (555) 456-7890"
-    }
-  ]);
-
-  const [dailyStats] = useState({
-    todaySubmissions: 12,
-    scheduledInterviews: 4,
-    pendingFeedback: 6,
-    newCandidates: 8
+  const [candidates, setCandidates] = useState<MarketingCandidate[]>([]);
+  const [activeTab, setActiveTab] = useState("candidates");
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    position: '',
+    source: '',
+    status: 'First Contact'
   });
+
+  useEffect(() => {
+    loadCandidates();
+  }, []);
+
+  const loadCandidates = async () => {
+    try {
+      const candidateData = await FormHandlers.getMarketingCandidates();
+      setCandidates(candidateData);
+    } catch (error) {
+      console.error('Failed to load candidates:', error);
+    }
+  };
+
+  const handleAddCandidate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const newCandidate = await FormHandlers.addMarketingCandidate(formData);
+      setCandidates(prev => [...prev, newCandidate]);
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        position: '',
+        source: '',
+        status: 'First Contact'
+      });
+      
+      setActiveTab("candidates");
+      console.log('Candidate added successfully:', newCandidate);
+    } catch (error) {
+      console.error('Failed to add candidate:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (candidateId: number, newStatus: string) => {
+    try {
+      const updatedCandidates = candidates.map(candidate =>
+        candidate.id === candidateId ? { ...candidate, status: newStatus } : candidate
+      );
+      setCandidates(updatedCandidates);
+      
+      // Save to localStorage
+      localStorage.setItem('marketing_candidates_data', JSON.stringify(updatedCandidates));
+      
+      console.log(`Candidate ${candidateId} status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Failed to update candidate status:', error);
+    }
+  };
+
+  const handleSendEmail = async (email: string, name: string) => {
+    try {
+      await FormHandlers.sendEmail(
+        email,
+        'Follow-up from Marketing Team',
+        `Dear ${name}, we wanted to follow up on your application...`
+      );
+      console.log(`Email sent to ${email}`);
+    } catch (error) {
+      console.error('Failed to send email:', error);
+    }
+  };
+
+  const dailyStats = {
+    todaySubmissions: candidates.filter(c => c.lastContact === new Date().toISOString().split('T')[0]).length,
+    scheduledInterviews: candidates.filter(c => c.status === 'Interview Scheduled').length,
+    pendingFeedback: candidates.filter(c => c.status === 'Feedback Pending').length,
+    newCandidates: candidates.filter(c => c.status === 'First Contact').length
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -76,7 +119,10 @@ const MarketingManagement = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Marketing Management</h1>
-        <Button className="flex items-center space-x-2">
+        <Button 
+          className="flex items-center space-x-2"
+          onClick={() => setActiveTab("add")}
+        >
           <Plus className="h-4 w-4" />
           <span>Add New Candidate</span>
         </Button>
@@ -133,7 +179,7 @@ const MarketingManagement = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="candidates" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="candidates">Marketing Candidates</TabsTrigger>
           <TabsTrigger value="add">Add New Candidate</TabsTrigger>
@@ -147,55 +193,63 @@ const MarketingManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {candidates.map((candidate) => (
-                  <div key={candidate.id} className="p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{candidate.name}</h3>
-                            <p className="text-sm text-gray-600">{candidate.position}</p>
-                            <p className="text-xs text-gray-500">Source: {candidate.source}</p>
+                {candidates.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No candidates found. Add your first candidate to get started.</p>
+                  </div>
+                ) : (
+                  candidates.map((candidate) => (
+                    <div key={candidate.id} className="p-4 border rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{candidate.name}</h3>
+                              <p className="text-sm text-gray-600">{candidate.position}</p>
+                              <p className="text-xs text-gray-500">Source: {candidate.source}</p>
+                              <p className="text-xs text-gray-500">Email: {candidate.email}</p>
+                              <p className="text-xs text-gray-500">Phone: {candidate.phone}</p>
+                            </div>
+                            <div className="text-right">
+                              {getStatusBadge(candidate.status)}
+                              <p className="text-xs text-gray-500 mt-1">Last Contact: {candidate.lastContact}</p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            {getStatusBadge(candidate.status)}
-                            <p className="text-xs text-gray-500 mt-1">Last Contact: {candidate.lastContact}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div className="bg-blue-50 p-3 rounded">
-                            <p className="text-xs font-medium text-blue-600">Submissions</p>
-                            <p className="text-xl font-bold text-blue-800">{candidate.submissions}</p>
-                          </div>
-                          <div className="bg-green-50 p-3 rounded">
-                            <p className="text-xs font-medium text-green-600">Interviews</p>
-                            <p className="text-xl font-bold text-green-800">{candidate.interviews}</p>
-                          </div>
-                          <div className="bg-gray-50 p-3 rounded">
-                            <p className="text-xs font-medium text-gray-600">Contact Info</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Button size="sm" variant="ghost" className="p-1">
+                          
+                          <div className="mt-4 flex items-center space-x-4">
+                            <div className="flex items-center space-x-2">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="p-1"
+                                onClick={() => handleSendEmail(candidate.email, candidate.name)}
+                              >
                                 <Mail className="h-3 w-3" />
                               </Button>
                               <Button size="sm" variant="ghost" className="p-1">
                                 <Phone className="h-3 w-3" />
                               </Button>
                             </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
                             <Button size="sm" variant="outline">
                               View Details
                             </Button>
-                            <Button size="sm">
-                              Update Status
-                            </Button>
+                            <select
+                              value={candidate.status}
+                              onChange={(e) => handleUpdateStatus(candidate.id!, e.target.value)}
+                              className="px-3 py-1 text-sm border rounded"
+                            >
+                              <option value="First Contact">First Contact</option>
+                              <option value="Interview Scheduled">Interview Scheduled</option>
+                              <option value="Feedback Pending">Feedback Pending</option>
+                              <option value="Hired">Hired</option>
+                              <option value="Rejected">Rejected</option>
+                            </select>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -207,36 +261,82 @@ const MarketingManagement = () => {
               <CardTitle>Add New Marketing Candidate</CardTitle>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4">
+              <form onSubmit={handleAddCandidate} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="candidateName">Full Name</Label>
-                    <Input id="candidateName" placeholder="Enter candidate name" />
+                    <Input 
+                      id="candidateName" 
+                      placeholder="Enter candidate name"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="position">Target Position</Label>
-                    <Input id="position" placeholder="Enter target position" />
+                    <Input 
+                      id="position" 
+                      placeholder="Enter target position"
+                      value={formData.position}
+                      onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="Enter email" />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="Enter email"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" placeholder="Enter phone number" />
+                    <Input 
+                      id="phone" 
+                      placeholder="Enter phone number"
+                      value={formData.phone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="source">Source</Label>
-                    <Input id="source" placeholder="e.g., LinkedIn, Job Board, Referral" />
+                    <Input 
+                      id="source" 
+                      placeholder="e.g., LinkedIn, Job Board, Referral"
+                      value={formData.source}
+                      onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="status">Initial Status</Label>
-                    <Input id="status" placeholder="e.g., First Contact" />
+                    <select
+                      id="status"
+                      value={formData.status}
+                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-md"
+                    >
+                      <option value="First Contact">First Contact</option>
+                      <option value="Interview Scheduled">Interview Scheduled</option>
+                      <option value="Feedback Pending">Feedback Pending</option>
+                    </select>
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button type="submit">Add Candidate</Button>
-                  <Button type="button" variant="outline">
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? 'Adding...' : 'Add Candidate'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => setActiveTab("candidates")}
+                  >
                     Cancel
                   </Button>
                 </div>
