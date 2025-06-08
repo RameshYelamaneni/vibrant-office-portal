@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, Search, Eye } from "lucide-react";
+import { Plus, Search, Eye, Upload, Trash2 } from "lucide-react";
 import { FormHandlers, Employee } from '../../services/FormHandlers';
 import AddEmployeeForm from '../forms/AddEmployeeForm';
 
@@ -144,11 +146,11 @@ const EmployeeManagement = () => {
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-16 w-16">
                         <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
-                          {selectedEmployee.name.split(' ').map(n => n[0]).join('')}
+                          {selectedEmployee.firstName[0]}{selectedEmployee.lastName[0]}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h2 className="text-xl font-semibold">{selectedEmployee.name}</h2>
+                        <h2 className="text-xl font-semibold">{selectedEmployee.firstName} {selectedEmployee.lastName}</h2>
                         <p className="text-gray-600">{selectedEmployee.position}</p>
                       </div>
                     </div>
@@ -168,8 +170,8 @@ const EmployeeManagement = () => {
                       <div>
                         <Label className="text-sm font-medium text-gray-500">Status</Label>
                         <p className="mt-1">
-                          <Badge variant={selectedEmployee.status === 'Active' ? 'default' : 'secondary'}>
-                            {selectedEmployee.status}
+                          <Badge variant="default">
+                            Active
                           </Badge>
                         </p>
                       </div>
@@ -190,19 +192,9 @@ const EmployeeManagement = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {selectedEmployee.documents.map((doc, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">{doc}</span>
-                        <div className="flex space-x-1">
-                          <Button size="sm" variant="ghost">
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button size="sm" variant="ghost">
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                    <div className="text-center py-4 text-gray-500">
+                      No documents uploaded yet.
+                    </div>
                   </div>
                 </CardContent>
               </Card>

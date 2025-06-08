@@ -1,4 +1,3 @@
-
 export interface Employee {
   id?: number;
   firstName: string;
@@ -8,6 +7,9 @@ export interface Employee {
   department: string;
   joinDate: string;
   profilePhoto?: string;
+  name?: string;
+  status?: 'Active' | 'Inactive';
+  documents?: string[];
 }
 
 export interface Timesheet {
