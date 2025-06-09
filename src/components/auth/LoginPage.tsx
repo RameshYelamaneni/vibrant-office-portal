@@ -16,7 +16,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const API_BASE_URL = 'http://localhost:3001/api';
+  const API_BASE_URL = 'http://localhost:8082/api';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,7 +109,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
               <h4 className="font-semibold text-sm mb-2">Database Connection:</h4>
               <div className="text-xs text-gray-600">
                 <p>This login now connects to your SQL Server database.</p>
-                <p>Make sure your backend server is running on port 3001.</p>
+                <p>Make sure your backend server is running on port 8082.</p>
                 <p className="mt-2 font-medium">Default admin account:</p>
                 <p>Email: admin@company.com</p>
                 <p>Password: admin123</p>
