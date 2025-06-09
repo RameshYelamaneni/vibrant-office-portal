@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
@@ -23,18 +22,24 @@ const Index = () => {
   useEffect(() => {
     // Check if user is already logged in
     const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
+    const authToken = localStorage.getItem('authToken');
+    
+    if (savedUser && authToken) {
+      console.log('Found saved user and token, auto-logging in');
       setCurrentUser(JSON.parse(savedUser));
     }
     setIsLoading(false);
   }, []);
 
   const handleLogin = (user: any) => {
+    console.log('User logged in:', user);
     setCurrentUser(user);
   };
 
   const handleLogout = () => {
+    console.log('User logging out');
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('authToken');
     setCurrentUser(null);
     setActiveModule('dashboard');
   };

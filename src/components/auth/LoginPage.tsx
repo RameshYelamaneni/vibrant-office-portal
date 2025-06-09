@@ -16,37 +16,53 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const demoAccounts = [
-    { email: 'admin@company.com', password: 'admin123', role: 'Admin', name: 'John Admin' },
-    { email: 'manager@company.com', password: 'manager123', role: 'Manager', name: 'Sarah Manager' },
-    { email: 'employee@company.com', password: 'employee123', role: 'Employee', name: 'Mike Employee' },
-    { email: 'marketing@company.com', password: 'marketing123', role: 'Marketing Associate', name: 'Lisa Marketing' },
-    { email: 'hr@company.com', password: 'hr123', role: 'HR', name: 'Anna HR' }
-  ];
+  const API_BASE_URL = 'http://localhost:3001/api';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Demo authentication
-    const user = demoAccounts.find(acc => acc.email === email && acc.password === password);
-    
-    if (user) {
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      onLogin(user);
+    try {
+      console.log('Attempting to login with:', { email });
+      
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      console.log('Login response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
+      }
+
+      const data = await response.json();
+      console.log('Login successful:', data);
+
+      // Store the JWT token
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      
+      onLogin(data.user);
+      
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${user.name}!`,
+        description: `Welcome back, ${data.user.name}!`,
       });
-    } else {
+    } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "Login Failed",
-        description: "Invalid email or password. Try demo accounts.",
+        description: error instanceof Error ? error.message : "Invalid email or password",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
@@ -90,15 +106,13 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
             </form>
             
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-semibold text-sm mb-2">Demo Accounts:</h4>
-              <div className="text-xs space-y-1">
-                {demoAccounts.map((account, index) => (
-                  <div key={index} className="flex justify-between">
-                    <span>{account.role}:</span>
-                    <span>{account.email}</span>
-                  </div>
-                ))}
-                <p className="text-gray-500 mt-2">All passwords: admin123, manager123, etc.</p>
+              <h4 className="font-semibold text-sm mb-2">Database Connection:</h4>
+              <div className="text-xs text-gray-600">
+                <p>This login now connects to your SQL Server database.</p>
+                <p>Make sure your backend server is running on port 3001.</p>
+                <p className="mt-2 font-medium">Default admin account:</p>
+                <p>Email: admin@company.com</p>
+                <p>Password: admin123</p>
               </div>
             </div>
           </CardContent>
