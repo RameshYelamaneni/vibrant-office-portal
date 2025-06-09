@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
 import Dashboard from '../components/modules/Dashboard';
@@ -10,18 +10,56 @@ import CompanyDocuments from '../components/modules/CompanyDocuments';
 import HROperations from '../components/modules/HROperations';
 import EmailSetup from '../components/modules/EmailSetup';
 import Settings from '../components/modules/Settings';
+import LoginPage from '../components/auth/LoginPage';
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const Index = () => {
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [userRole] = useState('Admin');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+    setIsLoading(false);
+  }, []);
+
+  const handleLogin = (user: any) => {
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    setCurrentUser(null);
+    setActiveModule('dashboard');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-sm">CP</span>
+          </div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   const renderModule = () => {
     switch (activeModule) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard userRole={currentUser.role} />;
       case 'employees':
         return <EmployeeManagement />;
       case 'timesheet':
@@ -37,7 +75,7 @@ const Index = () => {
       case 'settings':
         return <Settings />;
       default:
-        return <Dashboard />;
+        return <Dashboard userRole={currentUser.role} />;
     }
   };
 
@@ -64,7 +102,7 @@ const Index = () => {
             setActiveModule(module);
             setSidebarOpen(false); // Close mobile sidebar when item is selected
           }}
-          userRole={userRole}
+          userRole={currentUser.role}
         />
       </div>
 
@@ -86,7 +124,7 @@ const Index = () => {
 
         {/* Desktop header */}
         <div className="hidden md:block">
-          <Header userRole={userRole} />
+          <Header user={currentUser} onLogout={handleLogout} />
         </div>
 
         {/* Main content area */}
